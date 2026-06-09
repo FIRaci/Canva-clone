@@ -801,6 +801,7 @@ export const useEditor = ({
         transparentCorners: false,
         borderOpacityWhenMoving: 1,
         cornerStrokeColor: "#3b82f6",
+        strokeUniform: true,
       });
 
       const initialWorkspace = new fabric.Rect({

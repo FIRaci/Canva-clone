@@ -39,9 +39,36 @@ export const useCanvasEvents = ({
       };
 
       const onObjectModified = (event: fabric.IEvent) => {
+        const target = event.target;
+        
+        if (target && ["text", "i-text", "textbox"].includes(target.type || "")) {
+          const scaleX = target.scaleX || 1;
+          const scaleY = target.scaleY || 1;
+          
+          if (scaleX !== 1 || scaleY !== 1) {
+            const fontSize = (target as any).fontSize || 1;
+            
+            target.set({
+              fontSize: Math.round(fontSize * scaleX),
+              scaleX: 1,
+              scaleY: 1,
+            });
+            
+            if (target.type === "textbox") {
+              target.set({
+                width: Math.round(target.width! * scaleX),
+              });
+            }
+            
+            canvas.requestRenderAll();
+          }
+        }
+
         if (isHistoryLocked() || isTransientObject(event.target as fabric.Object | undefined)) {
           return;
         }
+        
+        setSelectedObjects([...canvas.getActiveObjects()]);
         save();
       };
 

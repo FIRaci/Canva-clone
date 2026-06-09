@@ -48,9 +48,7 @@ export const useCanvasEvents = ({
           if (scaleX !== 1 || scaleY !== 1) {
             const fontSize = (target as any).fontSize || 1;
             
-            // @ts-ignore
-            // Faulty TS library, fontSize exists on Text
-            target.set({
+            (target as any).set({
               fontSize: Math.round(fontSize * scaleX),
               scaleX: 1,
               scaleY: 1,

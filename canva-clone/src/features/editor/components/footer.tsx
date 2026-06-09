@@ -1,4 +1,4 @@
-import { Copy, GripVertical, Trash2 } from "lucide-react";
+import { Copy, GripVertical, Trash2, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Editor } from "@/features/editor/types";
@@ -43,8 +43,8 @@ export const Footer = ({
 
   return (
     <footer className="h-[112px] border-t bg-white w-full flex items-center z-[49] p-2 gap-x-1 shrink-0 px-4 relative">
-      <div className="absolute left-1/2 -translate-x-1/2 bottom-2 max-w-[70vw] overflow-x-auto">
-        <div className="flex items-end gap-3 px-2">
+      <div className="absolute left-1/2 -translate-x-1/2 bottom-2 max-w-[70vw] overflow-x-auto pt-3">
+        <div className="flex items-start gap-3 px-2">
           {slides.map((slide, index) => {
             const isActive = index === activeSlideIndex;
 
@@ -131,19 +131,51 @@ export const Footer = ({
         </div>
       </div>
 
-      <div className="ml-auto flex items-center gap-3 w-[260px] pr-1">
-        <Slider
-          value={[zoomPercent]}
-          min={10}
-          max={500}
-          step={1}
-          onValueChange={(value) => {
-            const next = value[0] ?? 100;
+      <div className="ml-auto flex items-center gap-1 w-[260px] pr-1 justify-end">
+        <button
+          onClick={() => {
+            const next = Math.max(10, zoomPercent - 10);
             setZoomPercent(next);
             editor?.setZoomPercent(next);
           }}
-        />
-        <span className="w-14 text-right text-sm font-medium text-slate-700">{zoomPercent}%</span>
+          className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-200"
+        >
+          <Minus className="size-4" />
+        </button>
+        <div className="flex items-center bg-slate-100 rounded-md px-1 focus-within:ring-2 focus-within:ring-blue-500">
+          <input 
+            type="number"
+            value={zoomPercent}
+            onChange={(e) => {
+              setZoomPercent(Number(e.target.value));
+            }}
+            onBlur={() => {
+              const next = Math.max(10, Math.min(500, zoomPercent));
+              setZoomPercent(next);
+              editor?.setZoomPercent(next);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                const next = Math.max(10, Math.min(500, zoomPercent));
+                setZoomPercent(next);
+                editor?.setZoomPercent(next);
+              }
+            }}
+            className="w-10 text-center text-sm font-medium text-slate-700 bg-transparent border-none focus:outline-none appearance-none"
+            style={{ MozAppearance: 'textfield' }}
+          />
+          <span className="text-sm font-medium text-slate-700 pr-1">%</span>
+        </div>
+        <button
+          onClick={() => {
+            const next = Math.min(500, zoomPercent + 10);
+            setZoomPercent(next);
+            editor?.setZoomPercent(next);
+          }}
+          className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-200"
+        >
+          <Plus className="size-4" />
+        </button>
       </div>
     </footer>
   );

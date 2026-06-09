@@ -23,6 +23,8 @@ export const useAutoResize = ({ canvas, container }: UseAutoResizeProps) => {
       .getObjects()
       .find((object) => object.name === "clip");
 
+    if (!localWorkspace) return;
+
     // @ts-ignore
     const scale = fabric.util.findScaleToFit(localWorkspace, {
       width: width,

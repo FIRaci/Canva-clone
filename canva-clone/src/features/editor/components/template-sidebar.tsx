@@ -23,6 +23,7 @@ interface TemplateSidebarProps {
   editor: Editor | undefined;
   activeTool: ActiveTool;
   onChangeActiveTool: (tool: ActiveTool) => void;
+  onLoadTemplate?: (json: string) => void;
 };
 
 const RECENT_TEMPLATE_IDS_KEY = "editor-recent-template-ids";
@@ -43,6 +44,7 @@ export const TemplateSidebar = ({
   editor,
   activeTool,
   onChangeActiveTool,
+  onLoadTemplate,
 }: TemplateSidebarProps) => {
   const { t } = useLanguage();
   const { shouldBlock, triggerPaywall } = usePaywall();
@@ -152,7 +154,11 @@ export const TemplateSidebar = ({
     const ok = await confirm();
 
     if (ok) {
-      editor?.loadJson(template.json);
+      if (onLoadTemplate) {
+        onLoadTemplate(template.json);
+      } else {
+        editor?.loadJson(template.json);
+      }
       markTemplateAsRecent(template.templateKey);
     }
   };

@@ -257,6 +257,39 @@ export const Editor = ({ initialData }: EditorProps) => {
 
   const debouncedPersist = useMemo(() => debounce(persistProject, 500), [persistProject]);
 
+  const onLoadTemplate = useCallback((json: string) => {
+    if (!editor) return;
+
+    try {
+      const parsed = JSON.parse(json) as Partial<MultiSlideProjectPayload>;
+      if (parsed?.version === MULTI_SLIDE_VERSION && Array.isArray(parsed.slides)) {
+        const newSlides = parsed.slides
+          .filter((slide) => typeof slide?.json === "string")
+          .map((slide) => ({
+            id: createSlideId(),
+            json: slide.json,
+            width: Number(slide.width) > 0 ? Number(slide.width) : slidesRef.current[0]?.width || 1200,
+            height: Number(slide.height) > 0 ? Number(slide.height) : slidesRef.current[0]?.height || 900,
+            thumbnailUrl: slide.thumbnailUrl,
+          }));
+          
+        if (newSlides.length > 0) {
+          slidesRef.current = newSlides;
+          setSlides(newSlides);
+          setActiveSlideIndex(0);
+          activeSlideIndexRef.current = 0;
+          editor.loadJson(newSlides[0].json);
+        } else {
+          editor.loadJson(json);
+        }
+      } else {
+        editor.loadJson(json);
+      }
+    } catch {
+      editor.loadJson(json);
+    }
+  }, [editor]);
+
   useEffect(() => {
     return () => {
       debouncedPersist.cancel();
@@ -1195,6 +1228,7 @@ export const Editor = ({ initialData }: EditorProps) => {
           editor={editor}
           activeTool={activeTool}
           onChangeActiveTool={onChangeActiveTool}
+          onLoadTemplate={onLoadTemplate}
         />
         <FilterSidebar
           editor={editor}

@@ -407,7 +407,7 @@ export const Navbar = ({
         onSuccess: ({ data }) => {
           setIsFileDialogOpen(false);
           router.push(`/editor/${data.id}`);
-          toast.success("Project duplicated");
+          toast.success(t.projectDuplicated);
         },
       },
     );
@@ -423,7 +423,7 @@ export const Navbar = ({
         onSuccess: () => {
           setIsFileDialogOpen(false);
           router.push("/");
-          toast.success("Project deleted");
+          toast.success(t.projectDeleted);
         },
       },
     );
@@ -489,7 +489,7 @@ export const Navbar = ({
         <Dialog open={isFileDialogOpen} onOpenChange={setIsFileDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" variant="ghost">
-              File
+              {t.file}
               <ChevronDown className="size-4 ml-2" />
             </Button>
           </DialogTrigger>
@@ -562,7 +562,7 @@ export const Navbar = ({
                 onClick={() => fileInputRef.current?.click()}
               >
                 <FileUp className="mr-2 size-4" />
-                Upload files
+                {t.uploadFiles}
               </Button>
 
               <Button
@@ -571,11 +571,11 @@ export const Navbar = ({
                 className="h-10 w-full justify-start"
                 onClick={() => {
                   onManualSave();
-                  toast.success("Project saved");
+                  toast.success(t.projectSaved);
                 }}
               >
                 <Save className="mr-2 size-4" />
-                Save
+                {t.save}
               </Button>
 
               <Button
@@ -626,13 +626,13 @@ export const Navbar = ({
             <DialogHeader>
               <DialogTitle>Download</DialogTitle>
               <DialogDescription>
-                Choose a file type and the page range to export.
+                {t.exportOptionsDesc}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <p className="text-sm font-medium">File type</p>
+                <p className="text-sm font-medium">{t.fileType}</p>
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button
@@ -665,7 +665,7 @@ export const Navbar = ({
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm font-medium">Page range</p>
+                <p className="text-sm font-medium">{t.pageRange}</p>
                 <Input
                   value={downloadRange}
                   onChange={(event) => setDownloadRange(event.target.value)}
@@ -723,7 +723,7 @@ export const Navbar = ({
           <div className="flex items-center gap-x-2">
             <BsCloudCheck className="size-[20px] text-muted-foreground" />
             <div className="text-xs text-muted-foreground">
-              Saved
+              {t.saved}
             </div>
           </div>
         )}

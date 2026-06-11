@@ -64,17 +64,17 @@ export const SettingsSidebar = ({
       )}
     >
       <ToolSidebarHeader
-        title="Settings"
+        title={t.settings}
         description={t.resizeWorkspaceDescription}
       />
       <ScrollArea>
         <form className="space-y-4 p-4" onSubmit={onSubmit}>
           <div className="space-y-2">
             <Label>
-              Height
+              {t.heightPx}
             </Label>
             <Input
-              placeholder="Height"
+              placeholder={t.heightPx}
               value={height}
               type="number"
               onChange={(e) => changeHeight(e.target.value)}
@@ -82,17 +82,17 @@ export const SettingsSidebar = ({
           </div>
           <div className="space-y-2">
             <Label>
-              Width
+              {t.widthPx}
             </Label>
             <Input
-              placeholder="Width"
+              placeholder={t.widthPx}
               value={width}
               type="number"
               onChange={(e) => changeWidth(e.target.value)}
             />
           </div>
           <Button type="submit" className="w-full">
-            Resize
+            {t.resize}
           </Button>
         </form>
       </ScrollArea>

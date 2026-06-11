@@ -46,13 +46,7 @@ const STYLE_OPTIONS = [
 
 const SLIDE_COUNTS = [3, 5, 7] as const;
 
-const QUICK_PROMPTS = [
-  "Giới thiệu công ty startup công nghệ",
-  "Lợi ích của AI trong giáo dục",
-  "Kế hoạch marketing Q3 2025",
-  "Hướng dẫn sử dụng sản phẩm mới",
-  "Báo cáo kết quả kinh doanh",
-];
+
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -63,6 +57,14 @@ export const GenerateSlidesSidebar = ({
   onApplyGeneratedSlides,
 }: GenerateSlidesSidebarProps) => {
   const { t, language } = useLanguage();
+
+  const QUICK_PROMPTS = [
+    t.slideQuickPrompt1,
+    t.slideQuickPrompt2,
+    t.slideQuickPrompt3,
+    t.slideQuickPrompt4,
+    t.slideQuickPrompt5,
+  ];
   const [prompt, setPrompt] = useState("");
   const [slideCount, setSlideCount] = useState<number>(5);
   const [style, setStyle] = useState("professional");

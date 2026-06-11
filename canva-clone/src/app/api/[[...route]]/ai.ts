@@ -36,7 +36,7 @@ CANVAS: 1200×900 px. Top-left is (0, 0).
 
 TASK: Return valid JSON matching this schema:
 {
-  "message": "string — brief response in the user's language (Vietnamese/English)",
+  "message": "string — brief response in the user's requested language",
   "clearFirst": boolean — true when creating a whole new design, false when only adding/editing,
   "actions": [ ...array of canvas actions... ]
 }
@@ -322,7 +322,7 @@ const app = new Hono()
         return c.json(result);
       } catch (err) {
         console.error("[generate-slides] Gemini failed, using local demo deck:", err);
-        return c.json(createFallbackSlides(prompt, slideCount, style));
+        return c.json(createFallbackSlides(prompt, slideCount, style, language));
       }
     },
   );
@@ -400,6 +400,17 @@ const clampText = (value: unknown, fallback: string, maxLength = 90) => {
 };
 
 const fallbackBullets = (topic: string, isVietnamese: boolean) => {
+  const isVietnamese = detectVietnamese(userPrompt);
+const fallbackBullets = (topic: string, isVietnamese: boolean, isJapanese: boolean) => {
+  if (isJapanese) {
+    return [
+      `${topic}の概要`,
+      `主要なコンポーネント`,
+      `重要な事実とデータ`,
+      `今後の展望`
+    ];
+  }
+
   if (isVietnamese) {
     return [
       `Xác định vấn đề chính liên quan đến ${topic}`,
@@ -417,21 +428,30 @@ const fallbackBullets = (topic: string, isVietnamese: boolean) => {
   ];
 };
 
-function createFallbackSlideData(userPrompt: string, slideCount: number): GeminiSlideData[] {
+function createFallbackSlideData(userPrompt: string, slideCount: number, language?: string): GeminiSlideData[] {
   const count = normalizeSlideCount(slideCount);
-  const isVietnamese = detectVietnamese(userPrompt);
-  const topic = clampText(userPrompt, isVietnamese ? "Bài thuyết trình" : "Presentation", 64);
+  const isVietnamese = detectVietnamese(userPrompt) || language === "vi";
+  const isJapanese = language === "jp" || /[\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF\u2605-\u2606\u2190-\u2195\u203B]/.test(userPrompt);
+  
+  let topic = clampText(userPrompt, "Presentation", 64);
+  let titlePool = ["Context & Opportunity", "Key Benefits", "Implementation Plan", "Use Cases", "Risks to Manage", "Recommended Roadmap", "Success Metrics", "Conclusion"];
+  
+  if (isJapanese) {
+    topic = clampText(userPrompt, "プレゼンテーション", 64);
+    titlePool = ["背景と機会", "主な利点", "実施計画", "使用例", "管理すべきリスク", "推奨ロードマップ", "成功の指標", "結論"];
+  } else if (isVietnamese) {
+    topic = clampText(userPrompt, "Bài thuyết trình", 64);
+    titlePool = ["Bối cảnh & Cơ hội", "Lợi ích chính", "Cách triển khai", "Ví dụ ứng dụng", "Rủi ro cần quản lý", "Lộ trình đề xuất", "Chỉ số thành công", "Kết luận"];
+  }
+
+  const bullets = fallbackBullets(topic, isVietnamese, isJapanese);
   const middleCount = Math.max(0, count - 2);
-  const vietnameseTitles = ["Bối cảnh & cơ hội", "Lợi ích chính", "Cách triển khai", "Ví dụ ứng dụng", "Rủi ro cần quản lý", "Lộ trình đề xuất", "Chỉ số thành công", "Kết luận"];
-  const englishTitles = ["Context & Opportunity", "Key Benefits", "Implementation Plan", "Use Cases", "Risks to Manage", "Recommended Roadmap", "Success Metrics", "Conclusion"];
-  const titlePool = isVietnamese ? vietnameseTitles : englishTitles;
-  const bullets = fallbackBullets(topic, isVietnamese);
 
   const fallbackSlides: GeminiSlideData[] = [
     {
       slideType: "title",
       title: topic,
-      subtitle: isVietnamese ? "Bản trình bày được tạo tự động từ mô tả của bạn" : "An auto-generated presentation from your prompt",
+      subtitle: isJapanese ? "プロンプトから自動生成されたプレゼンテーション" : (isVietnamese ? "Bản trình bày được tạo tự động từ mô tả của bạn" : "An auto-generated presentation from your prompt"),
       bullets: [],
       decorationType: "circle_accent",
     },
@@ -444,8 +464,8 @@ function createFallbackSlideData(userPrompt: string, slideCount: number): Gemini
     })),
     {
       slideType: "closing",
-      title: isVietnamese ? "Cảm ơn" : "Thank You",
-      subtitle: isVietnamese ? "Sẵn sàng trao đổi và hoàn thiện nội dung" : "Ready to discuss and refine the content",
+      title: isJapanese ? "ありがとうございました" : (isVietnamese ? "Cảm ơn bạn đã lắng nghe!" : "Thank You!"),
+      subtitle: isJapanese ? "質問はありますか？" : (isVietnamese ? "Có câu hỏi nào không?" : "Any Questions?"),
       bullets: [],
       decorationType: "accent_bar",
     },
@@ -454,11 +474,12 @@ function createFallbackSlideData(userPrompt: string, slideCount: number): Gemini
   return fallbackSlides.slice(0, count);
 }
 
-function normalizeSlides(slides: GeminiSlideData[], slideCount: number, userPrompt: string): GeminiSlideData[] {
+function normalizeSlides(slides: GeminiSlideData[], slideCount: number, userPrompt: string, language?: string): GeminiSlideData[] {
   const count = normalizeSlideCount(slideCount);
-  const isVietnamese = detectVietnamese(userPrompt);
-  const topic = clampText(userPrompt, isVietnamese ? "chủ đề này" : "this topic", 48);
-  const defaults = createFallbackSlideData(userPrompt, count);
+  const isVietnamese = detectVietnamese(userPrompt) || language === "vi";
+  const isJapanese = language === "jp" || /[\u3000-\u303F\u3040-\u309F\u30A0-\u30FF\uFF00-\uFFEF\u4E00-\u9FAF\u2605-\u2606\u2190-\u2195\u203B]/.test(userPrompt);
+  const topic = clampText(userPrompt, isJapanese ? "プレゼンテーション" : (isVietnamese ? "Bài thuyết trình" : "Presentation"), 64);
+  const defaults = createFallbackSlideData(userPrompt, count, language);
 
   return Array.from({ length: count }, (_, index) => {
     const source = slides[index] ?? defaults[index] ?? defaults[defaults.length - 1];
@@ -472,16 +493,16 @@ function normalizeSlides(slides: GeminiSlideData[], slideCount: number, userProm
           ? "section"
           : "content";
     const bullets = Array.isArray(source?.bullets) && source.bullets.length > 0
-      ? source.bullets.slice(0, 5).map((bullet, bulletIndex) => clampText(bullet, fallbackBullets(topic, isVietnamese)[bulletIndex] ?? topic, 120))
-      : fallbackBullets(topic, isVietnamese);
+      ? source.bullets.slice(0, 5).map((bullet, bulletIndex) => clampText(bullet, fallbackBullets(topic, isVietnamese, isJapanese)[bulletIndex] ?? topic, 120))
+      : fallbackBullets(topic, isVietnamese, isJapanese);
     const decorationType = DECORATION_TYPES.includes(source?.decorationType as any)
       ? source?.decorationType
       : DECORATION_TYPES[index % DECORATION_TYPES.length];
 
     return {
       slideType,
-      title: clampText(source?.title, isFirst ? topic : `${isVietnamese ? "Ý chính" : "Key idea"} ${index + 1}`),
-      subtitle: clampText(source?.subtitle, isFirst ? (isVietnamese ? "Tổng quan ngắn gọn và dễ trình bày" : "A concise, presentation-ready overview") : ""),
+      title: clampText(source?.title, isFirst ? topic : `${isJapanese ? "主要なアイデア" : (isVietnamese ? "Ý chính" : "Key idea")} ${index + 1}`),
+      subtitle: clampText(source?.subtitle, isFirst ? (isJapanese ? "簡潔なプレゼンテーション概要" : (isVietnamese ? "Tổng quan ngắn gọn và dễ trình bày" : "A concise, presentation-ready overview")) : ""),
       bullets: slideType === "content" ? bullets : [],
       decorationType,
     };
@@ -782,7 +803,7 @@ async function callGeminiSlides(
         throw new Error("No slides returned");
       }
 
-      const normalizedSlides = normalizeSlides(parsed.slides, slideCount, userPrompt);
+      const normalizedSlides = normalizeSlides(parsed.slides, slideCount, userPrompt, language);
       const result = normalizedSlides.map((slide, index) => ({
         id: `generated-${Date.now()}-${index}`,
         title: slide.title || `Slide ${index + 1}`,
@@ -802,11 +823,12 @@ function createFallbackSlides(
   userPrompt: string,
   slideCount: number,
   style: string,
+  language?: string
 ): { slides: { id: string; title: string; json: string; width: number; height: number }[] } {
   const WIDTH = 1200;
   const HEIGHT = 900;
   const colors = STYLE_CONFIGS[style] || STYLE_CONFIGS.professional;
-  const slides = createFallbackSlideData(userPrompt, slideCount).map((slide, index) => ({
+  const slides = createFallbackSlideData(userPrompt, slideCount, language).map((slide, index) => ({
     id: `demo-generated-${Date.now()}-${index}`,
     title: slide.title || `Slide ${index + 1}`,
     json: buildFabricSlideJson(slide, WIDTH, HEIGHT, colors),

@@ -63,7 +63,7 @@ export const ProfilePage = () => {
 
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [loadProfile]);
 
   const updateProfile = async (patch: Partial<Pick<ProfileData, "name" | "email" | "language" | "image">>) => {
     if (!profile) return;

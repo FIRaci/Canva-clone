@@ -195,6 +195,7 @@ export type BuildEditorProps = {
   autoZoom: () => void;
   copy: () => void;
   paste: () => void;
+  copyStyle?: () => void;
   canvas: fabric.Canvas;
   fillColor: string;
   strokeColor: string;
@@ -231,6 +232,7 @@ export interface Editor {
   disableDrawingMode: () => void;
   onCopy: () => void;
   onPaste: () => void;
+  onCopyStyle?: () => void;
   changeImageFilter: (value: string) => void;
   addImage: (value: string) => void;
   delete: () => void;

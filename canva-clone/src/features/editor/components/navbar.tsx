@@ -38,6 +38,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Input } from "@/components/ui/input";
 import { useConfirm } from "@/hooks/use-confirm";
+import { useLanguage } from "@/contexts/language-context";
 import {
   DropdownMenu,
   DropdownMenuItem,
@@ -82,6 +83,7 @@ export const Navbar = ({
   onPresentSlide,
   onProjectRenamed,
 }: NavbarProps) => {
+  const { t } = useLanguage();
   const router = useRouter();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -732,15 +734,15 @@ export const Navbar = ({
             onClick={() => onChangeActiveTool("chat")}
           >
             <MessageSquare className="size-4 mr-2" />
-            Chat
+            {t.chat}
           </Button>
           <Button size="sm" variant="ghost" onClick={onPresent}>
             <Play className="size-4 mr-2" />
-            Present
+            {t.present}
           </Button>
           <Button size="sm" variant="ghost" onClick={onShare}>
             <Share2 className="size-4 mr-2" />
-            Share
+            {t.share}
           </Button>
         </div>
       </div>

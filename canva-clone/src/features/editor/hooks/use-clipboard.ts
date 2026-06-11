@@ -15,6 +15,36 @@ export const useClipboard = ({
       clipboard.current = cloned;
     });
   }, [canvas]);
+
+  const copyStyle = useCallback(() => {
+    const activeObject = canvas?.getActiveObject();
+    if (!activeObject) return;
+
+    if (activeObject.type && ["text", "i-text", "textbox"].includes(activeObject.type)) {
+      (canvas as any).__textStyleTemplate = {
+        fontFamily: (activeObject as any).fontFamily,
+        fontSize: (activeObject as any).fontSize,
+        fontWeight: (activeObject as any).fontWeight,
+        fontStyle: (activeObject as any).fontStyle,
+        underline: (activeObject as any).underline,
+        linethrough: (activeObject as any).linethrough,
+        fill: (activeObject as any).fill,
+        textAlign: (activeObject as any).textAlign,
+        charSpacing: (activeObject as any).charSpacing,
+        lineHeight: (activeObject as any).lineHeight,
+      };
+      (canvas as any).__objectStyleTemplate = null;
+    } else {
+      (canvas as any).__objectStyleTemplate = {
+        fill: activeObject.get("fill"),
+        stroke: activeObject.get("stroke"),
+        strokeWidth: activeObject.get("strokeWidth"),
+        opacity: activeObject.get("opacity"),
+        strokeDashArray: activeObject.get("strokeDashArray"),
+      };
+      (canvas as any).__textStyleTemplate = null;
+    }
+  }, [canvas]);
   
   const paste = useCallback(() => {
     if (!canvas) return;
@@ -71,5 +101,5 @@ export const useClipboard = ({
     });
   }, [canvas]);
 
-  return { copy, paste };
+  return { copy, paste, copyStyle };
 };

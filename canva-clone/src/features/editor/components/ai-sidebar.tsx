@@ -8,6 +8,7 @@ import { ToolSidebarHeader } from "@/features/editor/components/tool-sidebar-hea
 
 import { useGenerateImage } from "@/features/ai/api/use-generate-image";
 
+import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +28,7 @@ export const AiSidebar = ({
 }: AiSidebarProps) => {
   const { shouldBlock, triggerPaywall } = usePaywall();
   const mutation = useGenerateImage();
+  const { t } = useLanguage();
 
   const [value, setValue] = useState("");
   const [elapsed, setElapsed] = useState(0);
@@ -85,14 +87,14 @@ export const AiSidebar = ({
       )}
     >
       <ToolSidebarHeader
-        title="AI"
-        description="Generate an image using AI"
+        title={t.generateImage}
+        description={t.generateImageDesc}
       />
       <ScrollArea>
         <form onSubmit={onSubmit} className="p-4 space-y-6">
           <Textarea
             disabled={mutation.isPending}
-            placeholder="An astronaut riding a horse on mars, hd, dramatic lighting"
+            placeholder={t.generateImagePlaceholder}
             cols={30}
             rows={10}
             required
@@ -108,9 +110,9 @@ export const AiSidebar = ({
             {mutation.isPending ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin" />
-                Generating... {elapsed}s
+                {t.generating} {elapsed}s
               </span>
-            ) : "Generate"}
+            ) : t.generate}
           </Button>
         </form>
       </ScrollArea>

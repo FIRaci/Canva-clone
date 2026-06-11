@@ -24,6 +24,12 @@ export interface AIChatResponse {
   actions: CanvasAction[];
 }
 
+const getLanguagePrompt = (lang: string) => {
+  if (lang === "jp") return "CRITICAL: The user's preferred language is Japanese (jp). You MUST respond in Japanese and prioritize Japanese above all other languages for any text generated in the design.";
+  if (lang === "vi") return "The user's preferred language is Vietnamese. Please respond and generate text in Vietnamese.";
+  return "The user's preferred language is English. Please respond and generate text in English.";
+};
+
 const CHAT_SYSTEM_PROMPT = `You are Canvar AI — an intelligent design assistant for a canvas editor (similar to Canva).
 
 CANVAS: 1200×900 px. Top-left is (0, 0).
@@ -92,12 +98,14 @@ const RESPONSE_SCHEMA = {
   required: ["message", "clearFirst", "actions"],
 };
 
-async function callGeminiChat(userMessage: string): Promise<AIChatResponse> {
+async function callGeminiChat(userMessage: string, language: string = "en"): Promise<AIChatResponse> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("NO_API_KEY");
 
+  const systemPrompt = `${CHAT_SYSTEM_PROMPT}\n\n${getLanguagePrompt(language)}`;
+
   const body = {
-    system_instruction: { parts: [{ text: CHAT_SYSTEM_PROMPT }] },
+    system_instruction: { parts: [{ text: systemPrompt }] },
     contents: [{ role: "user", parts: [{ text: userMessage }] }],
     generationConfig: {
       responseMimeType: "application/json",
@@ -149,11 +157,11 @@ const app = new Hono()
   .post(
     "/chat",
     verifyAuth(),
-    zValidator("json", z.object({ message: z.string().min(1) })),
+    zValidator("json", z.object({ message: z.string().min(1), language: z.string().optional() })),
     async (c) => {
-      const { message } = c.req.valid("json");
+      const { message, language } = c.req.valid("json");
       try {
-        const result = await callGeminiChat(message);
+        const result = await callGeminiChat(message, language);
         return c.json(result);
       } catch (err) {
         const msg = (err as Error).message;
@@ -303,13 +311,14 @@ const app = new Hono()
         prompt: z.string().min(1),
         slideCount: z.number().min(2).max(10).optional(),
         style: z.enum(["professional", "creative", "minimal", "dark"]).optional(),
+        language: z.string().optional(),
       }),
     ),
     async (c) => {
-      const { prompt, slideCount = 5, style = "professional" } = c.req.valid("json");
+      const { prompt, slideCount = 5, style = "professional", language } = c.req.valid("json");
 
       try {
-        const result = await callGeminiSlides(prompt, slideCount, style);
+        const result = await callGeminiSlides(prompt, slideCount, style, language);
         return c.json(result);
       } catch (err) {
         console.error("[generate-slides] Gemini failed, using local demo deck:", err);
@@ -709,6 +718,7 @@ async function callGeminiSlides(
   userPrompt: string,
   slideCount: number,
   style: string,
+  language: string = "en",
 ): Promise<{ slides: { id: string; title: string; json: string; width: number; height: number }[] }> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error("NO_API_KEY");
@@ -716,9 +726,10 @@ async function callGeminiSlides(
   const WIDTH = 1200;
   const HEIGHT = 900;
   const colors = STYLE_CONFIGS[style] || STYLE_CONFIGS.professional;
+  const systemPrompt = `${SLIDES_SYSTEM_PROMPT}\n\n${getLanguagePrompt(language)}`;
 
   const body = {
-    system_instruction: { parts: [{ text: SLIDES_SYSTEM_PROMPT }] },
+    system_instruction: { parts: [{ text: systemPrompt }] },
     contents: [
       {
         role: "user",

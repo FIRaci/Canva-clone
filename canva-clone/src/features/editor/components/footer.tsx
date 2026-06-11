@@ -42,9 +42,9 @@ export const Footer = ({
   }, [editor, activeSlideIndex]);
 
   return (
-    <footer className="h-[112px] border-t bg-white w-full flex items-center z-[49] p-2 gap-x-1 shrink-0 px-4 relative">
-      <div className="absolute left-1/2 -translate-x-1/2 bottom-2 max-w-[70vw] overflow-x-auto pt-3">
-        <div className="flex items-start gap-3 px-2">
+    <footer className="h-[112px] border-t bg-white w-full flex items-center z-[50] p-2 gap-x-1 shrink-0 px-4 relative">
+      <div className="absolute left-1/2 -translate-x-1/2 bottom-2 max-w-[70vw] overflow-x-auto overflow-y-hidden pt-6 pb-2 px-4 scrollbar-hide">
+        <div className="flex items-start gap-3">
           {slides.map((slide, index) => {
             const isActive = index === activeSlideIndex;
 
@@ -69,7 +69,7 @@ export const Footer = ({
                     onReorderSlides(fromIndex, index);
                   }
                 }}
-                className="group flex flex-col items-center gap-1 min-w-[84px]"
+                className="group flex flex-col items-center gap-1 min-w-[84px] shrink-0"
               >
                 <div className="relative">
                   <div
@@ -86,52 +86,63 @@ export const Footer = ({
                     }
                   />
 
-                  <div className="absolute -top-2 -right-2 hidden group-hover:flex items-center gap-1">
-                    <button
-                      type="button"
-                      className="h-5 w-5 rounded bg-white border border-slate-300 flex items-center justify-center hover:bg-slate-100"
+                  <div className="absolute -top-4 -right-3 hidden group-hover:flex items-center gap-1 z-50">
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      className="h-6 w-6 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-50 transition"
                       onClick={(event) => {
                         event.stopPropagation();
                         onDuplicateSlide(index);
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") onDuplicateSlide(index);
+                      }}
                       aria-label="Duplicate slide"
                     >
-                      <Copy className="size-3" />
-                    </button>
-                    <button
-                      type="button"
-                      className="h-5 w-5 rounded bg-white border border-slate-300 flex items-center justify-center hover:bg-slate-100"
+                      <Copy className="size-3 text-slate-600" />
+                    </div>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      className="h-6 w-6 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-50 transition hover:text-red-600"
                       onClick={(event) => {
                         event.stopPropagation();
                         onDeleteSlide(index);
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") onDeleteSlide(index);
+                      }}
                       aria-label="Delete slide"
                     >
                       <Trash2 className="size-3" />
-                    </button>
+                    </div>
                   </div>
 
-                  <div className="absolute -bottom-1 -left-1 h-4 w-4 rounded bg-white border border-slate-300 hidden group-hover:flex items-center justify-center">
+                  <div className="absolute -bottom-1 -left-1 h-5 w-5 rounded-full bg-white border border-slate-200 shadow-sm hidden group-hover:flex items-center justify-center z-50 cursor-grab active:cursor-grabbing">
                     <GripVertical className="size-3 text-slate-500" />
                   </div>
                 </div>
-                <span className="text-[11px] text-slate-600">{index + 1}</span>
+                <span className="text-[11px] text-slate-600 font-medium">{index + 1}</span>
               </button>
             );
           })}
 
-          <button
-            type="button"
-            onClick={onAddSlide}
-            className="h-12 w-20 rounded border border-slate-300 bg-slate-200 text-slate-700 text-lg font-semibold hover:bg-slate-300 transition"
-            aria-label="Add slide"
-          >
-            +
-          </button>
+          <div className="flex flex-col items-center gap-1 min-w-[84px] shrink-0">
+            <button
+              type="button"
+              onClick={onAddSlide}
+              className="h-12 w-20 rounded border border-slate-300 bg-slate-100 text-slate-600 hover:text-slate-900 flex items-center justify-center hover:bg-slate-200 transition"
+              aria-label="Add slide"
+            >
+              <Plus className="size-5" />
+            </button>
+            <span className="text-[11px] text-transparent select-none">_</span>
+          </div>
         </div>
       </div>
 
-      <div className="ml-auto flex items-center gap-1 w-[260px] pr-1 justify-end">
+      <div className="ml-auto flex items-center gap-1 w-[260px] pr-1 justify-end relative z-[60]">
         <button
           onClick={() => {
             const next = Math.max(10, zoomPercent - 10);

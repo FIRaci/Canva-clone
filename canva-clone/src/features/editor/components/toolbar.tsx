@@ -107,17 +107,31 @@ export const Toolbar = ({
   const canUseCrop = Boolean((selectedObject && !isText) || isCropMode);
 
   useEffect(() => {
-    setProperties({
-      fillColor: editor?.getActiveFillColor(),
-      strokeColor: editor?.getActiveStrokeColor(),
-      fontFamily: editor?.getActiveFontFamily(),
-      fontWeight: editor?.getActiveFontWeight() || FONT_WEIGHT,
-      fontStyle: editor?.getActiveFontStyle(),
-      fontLinethrough: editor?.getActiveFontLinethrough(),
-      fontUnderline: editor?.getActiveFontUnderline(),
-      textAlign: editor?.getActiveTextAlign(),
-      fontSize: editor?.getActiveFontSize() || FONT_SIZE,
-    });
+    const updateProperties = () => {
+      setProperties({
+        fillColor: editor?.getActiveFillColor(),
+        strokeColor: editor?.getActiveStrokeColor(),
+        fontFamily: editor?.getActiveFontFamily(),
+        fontWeight: editor?.getActiveFontWeight() || FONT_WEIGHT,
+        fontStyle: editor?.getActiveFontStyle(),
+        fontLinethrough: editor?.getActiveFontLinethrough(),
+        fontUnderline: editor?.getActiveFontUnderline(),
+        textAlign: editor?.getActiveTextAlign(),
+        fontSize: editor?.getActiveFontSize() || FONT_SIZE,
+      });
+    };
+
+    updateProperties(); // Initial update
+
+    if (editor?.canvas) {
+      editor.canvas.on("object:modified", updateProperties);
+      editor.canvas.on("object:scaling", updateProperties);
+
+      return () => {
+        editor.canvas.off("object:modified", updateProperties);
+        editor.canvas.off("object:scaling", updateProperties);
+      };
+    }
   }, [editor, selectedObject]);
 
   const onChangeFontSize = (value: number) => {

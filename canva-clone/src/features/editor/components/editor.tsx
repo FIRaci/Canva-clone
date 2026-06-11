@@ -257,38 +257,7 @@ export const Editor = ({ initialData }: EditorProps) => {
 
   const debouncedPersist = useMemo(() => debounce(persistProject, 500), [persistProject]);
 
-  const onLoadTemplate = useCallback((json: string) => {
-    if (!editor) return;
 
-    try {
-      const parsed = JSON.parse(json) as Partial<MultiSlideProjectPayload>;
-      if (parsed?.version === MULTI_SLIDE_VERSION && Array.isArray(parsed.slides)) {
-        const newSlides = parsed.slides
-          .filter((slide) => typeof slide?.json === "string")
-          .map((slide) => ({
-            id: createSlideId(),
-            json: slide.json,
-            width: Number(slide.width) > 0 ? Number(slide.width) : slidesRef.current[0]?.width || 1200,
-            height: Number(slide.height) > 0 ? Number(slide.height) : slidesRef.current[0]?.height || 900,
-            thumbnailUrl: slide.thumbnailUrl,
-          }));
-          
-        if (newSlides.length > 0) {
-          slidesRef.current = newSlides;
-          setSlides(newSlides);
-          setActiveSlideIndex(0);
-          activeSlideIndexRef.current = 0;
-          editor.loadJson(newSlides[0].json);
-        } else {
-          editor.loadJson(json);
-        }
-      } else {
-        editor.loadJson(json);
-      }
-    } catch {
-      editor.loadJson(json);
-    }
-  }, [editor]);
 
   useEffect(() => {
     return () => {
@@ -348,6 +317,35 @@ export const Editor = ({ initialData }: EditorProps) => {
     editorRef.current = editor;
   }, [editor]);
 
+  const onLoadTemplate = useCallback((json: string) => {
+    if (!editor) return;
+
+    try {
+      const parsed = JSON.parse(json) as Partial<MultiSlideProjectPayload>;
+      if (parsed?.version === MULTI_SLIDE_VERSION && Array.isArray(parsed.slides)) {
+        const newSlides = parsed.slides
+          .filter((slide) => typeof slide?.json === "string")
+          .map((slide) => ({
+            id: createSlideId(),
+            json: slide.json,
+            width: Number(slide.width) > 0 ? Number(slide.width) : slidesRef.current[0]?.width || 1200,
+            height: Number(slide.height) > 0 ? Number(slide.height) : slidesRef.current[0]?.height || 900,
+            thumbnailUrl: slide.thumbnailUrl,
+          }));
+          
+        if (newSlides.length > 0) {
+          editor.loadJson(newSlides[0].json);
+        } else {
+          editor.loadJson(json);
+        }
+      } else {
+        editor.loadJson(json);
+      }
+    } catch {
+      editor.loadJson(json);
+    }
+  }, [editor]);
+
   const onChangeActiveTool = useCallback((tool: ActiveTool) => {
     if (tool === activeTool) {
       return setActiveTool("select");
@@ -372,35 +370,9 @@ export const Editor = ({ initialData }: EditorProps) => {
   }, [editor]);
 
   const onCopyStyleForNext = useCallback(() => {
-    const object = getCurrentContextObject();
-    if (!editor?.canvas || !object) return;
-
-    if (isTextType(object.type)) {
-      (editor.canvas as any).__textStyleTemplate = {
-        fontFamily: (object as any).fontFamily,
-        fontSize: (object as any).fontSize,
-        fontWeight: (object as any).fontWeight,
-        fontStyle: (object as any).fontStyle,
-        underline: (object as any).underline,
-        linethrough: (object as any).linethrough,
-        fill: (object as any).fill,
-        textAlign: (object as any).textAlign,
-        charSpacing: (object as any).charSpacing,
-        lineHeight: (object as any).lineHeight,
-      };
-      toast.success("Text style copied");
-      return;
-    }
-
-    (editor.canvas as any).__objectStyleTemplate = {
-      fill: object.get("fill"),
-      stroke: object.get("stroke"),
-      strokeWidth: object.get("strokeWidth"),
-      opacity: object.get("opacity"),
-      strokeDashArray: object.get("strokeDashArray"),
-    };
-    toast.success("Style copied");
-  }, [editor, getCurrentContextObject]);
+    editor?.onCopyStyle?.();
+    toast.success("Style copied for next paste");
+  }, [editor]);
 
   const onDuplicateObject = useCallback(() => {
     const object = getCurrentContextObject();

@@ -42,6 +42,7 @@ const buildEditor = ({
   autoZoom,
   copy,
   paste,
+  copyStyle,
   canvas,
   fillColor,
   fontFamily,
@@ -200,6 +201,7 @@ const buildEditor = ({
     onRedo: () => redo(),
     onCopy: () => copy(),
     onPaste: () => paste(),
+    onCopyStyle: () => copyStyle?.(),
     changeImageFilter: (value: string) => {
       const objects = canvas.getActiveObjects();
       objects.forEach((object) => {
@@ -278,8 +280,9 @@ const buildEditor = ({
       // @ts-ignore
       // Faulty TS library, fontSize exists.
       const value = selectedObject.get("fontSize") || FONT_SIZE;
-
-      return value;
+      const scaleX = selectedObject.get("scaleX") || 1;
+      
+      return Math.round(value * scaleX);
     },
     changeTextAlign: (value: string) => {
       canvas.getActiveObjects().forEach((object) => {
@@ -708,7 +711,7 @@ export const useEditor = ({
     saveCallback
   });
 
-  const { copy, paste } = useClipboard({ canvas });
+  const { copy, paste, copyStyle } = useClipboard({ canvas });
 
   const { autoZoom } = useAutoResize({
     canvas,
@@ -729,6 +732,7 @@ export const useEditor = ({
     paste,
     save,
     canvas,
+    copyStyle,
   });
 
   useLoadState({
@@ -750,6 +754,7 @@ export const useEditor = ({
         autoZoom,
         copy,
         paste,
+        copyStyle,
         canvas,
         fillColor,
         strokeWidth,
@@ -776,6 +781,7 @@ export const useEditor = ({
     autoZoom,
     copy,
     paste,
+    copyStyle,
     canvas,
     fillColor,
     strokeWidth,

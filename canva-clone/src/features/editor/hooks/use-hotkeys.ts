@@ -8,9 +8,10 @@ interface UseHotkeysProps {
   save: (skip?: boolean) => void;
   copy: () => void;
   paste: () => void;
+  copyStyle?: () => void;
 }
 
-export const useHotkeys = ({ canvas, undo, redo, save, copy, paste }: UseHotkeysProps) => {
+export const useHotkeys = ({ canvas, undo, redo, save, copy, paste, copyStyle }: UseHotkeysProps) => {
   useEvent("keydown", (event) => {
     const isCtrlKey = event.ctrlKey || event.metaKey;
     const isBackspace = event.key === "Backspace";
@@ -48,6 +49,11 @@ export const useHotkeys = ({ canvas, undo, redo, save, copy, paste }: UseHotkeys
     if (isCtrlKey && event.key === "v") {
       event.preventDefault();
       paste();
+    }
+
+    if (isCtrlKey && event.altKey && event.key === "c") {
+      event.preventDefault();
+      copyStyle?.();
     }
 
     if (isCtrlKey && event.key === "s") {

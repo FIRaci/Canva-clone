@@ -14,6 +14,7 @@ import {
 import { ActiveTool, Editor } from "@/features/editor/types";
 import { ToolSidebarClose } from "@/features/editor/components/tool-sidebar-close";
 import { ToolSidebarHeader } from "@/features/editor/components/tool-sidebar-header";
+import { useLanguage } from "@/contexts/language-context";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
@@ -61,6 +62,7 @@ export const GenerateSlidesSidebar = ({
   onChangeActiveTool,
   onApplyGeneratedSlides,
 }: GenerateSlidesSidebarProps) => {
+  const { t, language } = useLanguage();
   const [prompt, setPrompt] = useState("");
   const [slideCount, setSlideCount] = useState<number>(5);
   const [style, setStyle] = useState("professional");
@@ -69,7 +71,14 @@ export const GenerateSlidesSidebar = ({
   const [error, setError] = useState<string | null>(null);
   const [showStyleDropdown, setShowStyleDropdown] = useState(false);
 
-  const selectedStyle = STYLE_OPTIONS.find((s) => s.value === style) ?? STYLE_OPTIONS[0];
+  const STYLE_OPTIONS_LOCAL = [
+    { value: "professional", label: t.professional, emoji: "💼", colors: ["#2563EB", "#1E3A5F", "#FFFFFF"] },
+    { value: "creative", label: t.creative, emoji: "🎨", colors: ["#F97316", "#9A3412", "#FFF7ED"] },
+    { value: "minimal", label: t.minimal, emoji: "✨", colors: ["#18181B", "#09090B", "#FAFAFA"] },
+    { value: "dark", label: t.dark, emoji: "🌙", colors: ["#38BDF8", "#F1F5F9", "#0F172A"] },
+  ] as const;
+
+  const selectedStyle = STYLE_OPTIONS_LOCAL.find((s) => s.value === style) ?? STYLE_OPTIONS_LOCAL[0];
 
   const onGenerate = async () => {
     const text = prompt.trim();
@@ -83,7 +92,7 @@ export const GenerateSlidesSidebar = ({
       const res = await fetch("/api/ai/generate-slides", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: text, slideCount, style }),
+        body: JSON.stringify({ prompt: text, slideCount, style, language }),
       });
 
       if (!res.ok) {
@@ -127,8 +136,8 @@ export const GenerateSlidesSidebar = ({
       )}
     >
       <ToolSidebarHeader
-        title="AI Slides"
-        description="Tạo bài thuyết trình bằng AI"
+        title={t.aiSlidesTitle}
+        description={t.aiSlidesDesc}
       />
 
       <ScrollArea className="flex-1">
@@ -137,12 +146,12 @@ export const GenerateSlidesSidebar = ({
           <div className="space-y-2">
             <label className="text-xs font-semibold text-gray-700 flex items-center gap-1.5">
               <Wand2 className="w-3.5 h-3.5 text-indigo-500" />
-              Mô tả bài thuyết trình
+              {t.slidePromptLabel}
             </label>
             <textarea
               value={prompt}
               onChange={(e) => { setPrompt(e.target.value); setError(null); }}
-              placeholder="VD: Giới thiệu lợi ích của AI trong giáo dục hiện đại..."
+              placeholder={t.slidePromptPlaceholder}
               rows={3}
               disabled={isGenerating}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 resize-none focus:outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 transition-all disabled:opacity-60"
@@ -152,7 +161,7 @@ export const GenerateSlidesSidebar = ({
           {/* Quick Prompts */}
           {!generatedSlides.length && (
             <div className="space-y-2">
-              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Gợi ý nhanh</p>
+              <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">{t.quickPromptsTitle}</p>
               <div className="flex flex-wrap gap-1.5">
                 {QUICK_PROMPTS.map((p) => (
                   <button
@@ -172,7 +181,7 @@ export const GenerateSlidesSidebar = ({
           <div className="flex gap-3">
             {/* Slide Count */}
             <div className="flex-1 space-y-1.5">
-              <label className="text-[11px] font-medium text-gray-500">Số slide</label>
+              <label className="text-[11px] font-medium text-gray-500">{t.slideCountLabel}</label>
               <div className="flex gap-1">
                 {SLIDE_COUNTS.map((n) => (
                   <button
@@ -194,7 +203,7 @@ export const GenerateSlidesSidebar = ({
 
             {/* Style Selector */}
             <div className="flex-1 space-y-1.5">
-              <label className="text-[11px] font-medium text-gray-500">Phong cách</label>
+              <label className="text-[11px] font-medium text-gray-500">{t.styleLabel}</label>
               <div className="relative">
                 <button
                   onClick={() => setShowStyleDropdown(!showStyleDropdown)}
@@ -208,7 +217,7 @@ export const GenerateSlidesSidebar = ({
 
                 {showStyleDropdown && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
-                    {STYLE_OPTIONS.map((opt) => (
+                    {STYLE_OPTIONS_LOCAL.map((opt) => (
                       <button
                         key={opt.value}
                         onClick={() => { setStyle(opt.value); setShowStyleDropdown(false); }}
@@ -252,12 +261,12 @@ export const GenerateSlidesSidebar = ({
             {isGenerating ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                Đang tạo slides...
+                {t.generatingSlides}
               </>
             ) : (
               <>
                 <Sparkles className="w-4 h-4" />
-                Tạo bài thuyết trình
+                {t.generatePresentation}
               </>
             )}
           </button>
@@ -274,7 +283,7 @@ export const GenerateSlidesSidebar = ({
             <div className="space-y-3 animate-pulse">
               <div className="flex items-center gap-2 text-xs text-indigo-600">
                 <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                AI đang thiết kế {slideCount} slides...
+                {slideCount} {t.slidesGenerated}
               </div>
               {Array.from({ length: slideCount }).map((_, i) => (
                 <div key={i} className="bg-gray-100 rounded-lg h-16 flex items-center px-3 gap-3">
@@ -295,12 +304,12 @@ export const GenerateSlidesSidebar = ({
                 <div className="flex items-center gap-2">
                   <LayoutGrid className="w-3.5 h-3.5 text-emerald-600" />
                   <p className="text-xs font-semibold text-gray-700">
-                    {generatedSlides.length} slides đã tạo
+                    {generatedSlides.length} {t.slidesGenerated}
                   </p>
                 </div>
                 <div className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-                  <span className="text-[10px] text-emerald-600 font-medium">Sẵn sàng</span>
+                  <span className="text-[10px] text-emerald-600 font-medium">{t.ready}</span>
                 </div>
               </div>
 
@@ -319,10 +328,10 @@ export const GenerateSlidesSidebar = ({
                       </p>
                       <p className="text-[10px] text-gray-400 mt-0.5">
                         {index === 0
-                          ? "Title Slide"
+                          ? t.titleSlide
                           : index === generatedSlides.length - 1
-                            ? "Closing Slide"
-                            : "Content Slide"}
+                            ? t.closingSlide
+                            : t.contentSlide}
                       </p>
                     </div>
                     <Presentation className="w-3.5 h-3.5 text-gray-300 group-hover:text-indigo-400 transition-colors shrink-0" />
@@ -336,7 +345,7 @@ export const GenerateSlidesSidebar = ({
                 className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-semibold rounded-xl shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
               >
                 <Check className="w-4 h-4" />
-                Áp dụng tất cả {generatedSlides.length} slides
+                {t.applyAllSlides}
               </button>
 
               {/* Regenerate */}
@@ -346,7 +355,7 @@ export const GenerateSlidesSidebar = ({
                 className="w-full flex items-center justify-center gap-2 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 text-gray-600 text-xs font-medium rounded-xl transition-colors"
               >
                 <Sparkles className="w-3.5 h-3.5" />
-                Tạo lại
+                {t.regenerate}
               </button>
             </div>
           )}

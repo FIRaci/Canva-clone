@@ -399,8 +399,6 @@ const clampText = (value: unknown, fallback: string, maxLength = 90) => {
   return text.length > maxLength ? `${text.slice(0, maxLength - 1).trim()}…` : text;
 };
 
-const fallbackBullets = (topic: string, isVietnamese: boolean) => {
-  const isVietnamese = detectVietnamese(userPrompt);
 const fallbackBullets = (topic: string, isVietnamese: boolean, isJapanese: boolean) => {
   if (isJapanese) {
     return [

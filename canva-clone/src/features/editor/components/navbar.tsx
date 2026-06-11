@@ -495,7 +495,7 @@ export const Navbar = ({
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Project</DialogTitle>
+              <DialogTitle>{t.project}</DialogTitle>
             </DialogHeader>
 
             <div className="space-y-2">
@@ -539,7 +539,7 @@ export const Navbar = ({
                   }}
                 >
                   <Pencil className="mr-2 size-4" />
-                  Rename
+                  {t.rename}
                 </Button>
               </div>
 
@@ -551,7 +551,7 @@ export const Navbar = ({
                 onClick={onCreateNewDesign}
               >
                 <Plus className="mr-2 size-4" />
-                Create new design
+                {t.createNewDesign}
               </Button>
 
               <Button
@@ -586,7 +586,7 @@ export const Navbar = ({
                 onClick={onMakeCopy}
               >
                 <CopyPlus className="mr-2 size-4" />
-                Make a copy
+                {t.makeCopy}
               </Button>
 
               <Button
@@ -596,7 +596,7 @@ export const Navbar = ({
                 onClick={() => setIsDownloadDialogOpen(true)}
               >
                 <DownloadIcon className="mr-2 size-4" />
-                Download
+                {t.download}
               </Button>
 
               <Button
@@ -607,7 +607,7 @@ export const Navbar = ({
                 onClick={onDelete}
               >
                 <Trash className="mr-2 size-4" />
-                Delete
+                {t.delete}
               </Button>
             </div>
 
@@ -624,7 +624,7 @@ export const Navbar = ({
         <Dialog open={isDownloadDialogOpen} onOpenChange={setIsDownloadDialogOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Download</DialogTitle>
+              <DialogTitle>{t.download}</DialogTitle>
               <DialogDescription>
                 {t.exportOptionsDesc}
               </DialogDescription>
@@ -669,13 +669,13 @@ export const Navbar = ({
                 <Input
                   value={downloadRange}
                   onChange={(event) => setDownloadRange(event.target.value)}
-                  placeholder="Example: 1 or 1-3,5"
+                  placeholder={t.downloadRangeExample}
                 />
               </div>
 
               <div className="flex justify-end">
                 <Button type="button" onClick={onConfirmDownload}>
-                  Download
+                  {t.download}
                 </Button>
               </div>
             </div>

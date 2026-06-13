@@ -217,32 +217,63 @@ const app = new Hono()
     ),
     async (c) => {
       const { prompt } = c.req.valid("json");
+      const seed = Math.floor(Math.random() * 1000000);
+      const encoded = encodeURIComponent(prompt);
 
-      if (!process.env.REPLICATE_API_TOKEN) {
-        return c.json({ error: "Thiếu REPLICATE_API_TOKEN trong cấu hình của dự án. Vui lòng thêm vào tab Environment của Render." }, 500);
+      // Fetch an image URL server-side and return it as a base64 data URL so the
+      // canvas (fabric) can load it without running into CORS restrictions.
+      const fetchAsDataUrl = async (imageUrl: string, headers?: Record<string, string>) => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 25000);
+        try {
+          const res = await fetch(imageUrl, { signal: controller.signal, headers });
+          if (!res.ok) return null;
+          const contentType = res.headers.get("content-type") || "";
+          if (!contentType.startsWith("image/")) return null;
+          const buffer = await res.arrayBuffer();
+          const base64 = Buffer.from(buffer).toString("base64");
+          return `data:${contentType};base64,${base64}`;
+        } catch {
+          return null;
+        } finally {
+          clearTimeout(timeout);
+        }
+      };
+
+      // 1) Try Pollinations (free text-to-image). Note: anonymous usage is now
+      //    heavily rate-limited (HTTP 402 / x402), so this may fail.
+      const pollinationsUrls = [
+        `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=768&nologo=true&seed=${seed}`,
+        `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=768&nologo=true&seed=${seed + 1}&model=sana`,
+      ];
+      for (const imageUrl of pollinationsUrls) {
+        const dataUrl = await fetchAsDataUrl(imageUrl);
+        if (dataUrl) return c.json({ data: dataUrl });
       }
 
-      try {
-        const output: unknown = await replicate.run(
-          "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-          {
-            input: {
-              prompt,
+      // 2) Fallback: fetch a relevant real photo from Unsplash using the prompt
+      //    as a search query (reliable, uses the existing access key).
+      const unsplashKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
+      if (unsplashKey) {
+        try {
+          const searchUrl = `https://api.unsplash.com/search/photos?query=${encoded}&per_page=1&orientation=landscape&client_id=${unsplashKey}`;
+          const searchRes = await fetch(searchUrl);
+          if (searchRes.ok) {
+            const data = (await searchRes.json()) as {
+              results?: { urls?: { regular?: string; full?: string } }[];
+            };
+            const photoUrl = data.results?.[0]?.urls?.regular || data.results?.[0]?.urls?.full;
+            if (photoUrl) {
+              const dataUrl = await fetchAsDataUrl(photoUrl);
+              if (dataUrl) return c.json({ data: dataUrl });
             }
           }
-        );
-
-        const res = output as Array<string>;
-
-        if (res && res.length > 0) {
-          return c.json({ data: res[0] });
+        } catch {
+          // ignore and fall through to error
         }
-        
-        return c.json({ error: "Không thể tạo ảnh, vui lòng thử lại sau." }, 500);
-      } catch (error) {
-        const msg = error instanceof Error ? error.message : "Unknown error";
-        return c.json({ error: "Lỗi từ Replicate: " + msg }, 500);
       }
+
+      return c.json({ error: "Không thể tạo ảnh, vui lòng thử lại sau." }, 500);
     },
   )
   .post(

@@ -11,11 +11,14 @@ export const useGenerateImage = () => {
   const mutation = useMutation<ResponseType, Error, RequestType>({
     mutationFn: async (json) => {
       const response = await client.api.ai["generate-image"].$post({ json });
-      if (!response.ok) throw new Error("Failed to generate image");
+      if (!response.ok) {
+        const res = await response.json().catch(() => ({}));
+        throw new Error((res as any).error || "Failed to generate image");
+      }
       return await response.json();
     },
-    onError: () => {
-      toast.error("Failed to generate image. Please try again.");
+    onError: (error) => {
+      toast.error(error.message || "Failed to generate image. Please try again.");
     },
   });
 

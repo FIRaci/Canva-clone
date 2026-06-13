@@ -218,6 +218,10 @@ const app = new Hono()
     async (c) => {
       const { prompt } = c.req.valid("json");
 
+      if (!process.env.REPLICATE_API_TOKEN) {
+        return c.json({ error: "Thiếu REPLICATE_API_TOKEN trong cấu hình của dự án. Vui lòng thêm vào tab Environment của Render." }, 500);
+      }
+
       try {
         const output: unknown = await replicate.run(
           "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
@@ -234,9 +238,10 @@ const app = new Hono()
           return c.json({ data: res[0] });
         }
         
-        return c.json({ error: "Failed to generate image, please try again" }, 500);
+        return c.json({ error: "Không thể tạo ảnh, vui lòng thử lại sau." }, 500);
       } catch (error) {
-        return c.json({ error: "Failed to generate image, please try again" }, 500);
+        const msg = error instanceof Error ? error.message : "Unknown error";
+        return c.json({ error: "Lỗi từ Replicate: " + msg }, 500);
       }
     },
   )

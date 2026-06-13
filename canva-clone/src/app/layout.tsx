@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
-import { Analytics } from "@vercel/analytics/react";
 
 import { SubscriptionAlert } from "@/features/subscriptions/components/subscription-alert";
 import { LanguageProvider } from "@/contexts/language-context";
@@ -39,7 +38,6 @@ export default async function RootLayout({
               {children}
             </Providers>
           </LanguageProvider>
-          <Analytics />
         </body>
       </html>
     </SessionProvider>

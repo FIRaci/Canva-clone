@@ -218,38 +218,26 @@ const app = new Hono()
     async (c) => {
       const { prompt } = c.req.valid("json");
 
-      const seed = Math.floor(Math.random() * 1000000);
-      const encoded = encodeURIComponent(prompt);
+      try {
+        const output: unknown = await replicate.run(
+          "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+          {
+            input: {
+              prompt,
+            }
+          }
+        );
 
-      const urls = [
-        `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=768&nologo=true&seed=${seed}&model=flux`,
-        `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=768&nologo=true&seed=${seed + 1}&model=turbo`,
-      ];
+        const res = output as Array<string>;
 
-      for (const imageUrl of urls) {
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 25000);
-
-          const res = await fetch(imageUrl, { signal: controller.signal });
-          clearTimeout(timeout);
-
-          if (!res.ok) continue;
-
-          const contentType = res.headers.get("content-type") || "";
-          if (!contentType.startsWith("image/")) continue;
-
-          const buffer = await res.arrayBuffer();
-          const base64 = Buffer.from(buffer).toString("base64");
-          const dataUrl = `data:${contentType};base64,${base64}`;
-
-          return c.json({ data: dataUrl });
-        } catch {
-          continue;
+        if (res && res.length > 0) {
+          return c.json({ data: res[0] });
         }
+        
+        return c.json({ error: "Failed to generate image, please try again" }, 500);
+      } catch (error) {
+        return c.json({ error: "Failed to generate image, please try again" }, 500);
       }
-
-      return c.json({ error: "Failed to generate image, please try again" }, 500);
     },
   )
   .post(
